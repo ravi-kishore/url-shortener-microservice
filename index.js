@@ -58,39 +58,42 @@ app.get('/new/*', function(req, res){
 		retval.error = "Failed to generate a short url as the given string is not a url";
 		res.send(JSON.stringify(retval));
 	}
-	mongo.connect(MONGO_KEY, function(err, db) {
-		var shortId = shortHash.unique(url);
-		findRow({'short_id': shortId}, db.collection(MONGO_DB_URL_COL), function(err, documents){
-			console.log("find err:" + JSON.stringify(err));
-			console.log("find doc:" + JSON.stringify(documents));
-			if(!err && documents.length == 0 || err)	//means its not inserted or there was some problem finding
-			{
-				//try to insert
-				var doc = {'original_url': url, 'short_id': shortId};		//TODO: assuming no collisions
-				insertRow(doc, db.collection(MONGO_DB_URL_COL), function(err, document) {
+	else
+	{
+		mongo.connect(MONGO_KEY, function(err, db) {
+			var shortId = shortHash.unique(url);
+			findRow({'short_id': shortId}, db.collection(MONGO_DB_URL_COL), function(err, documents){
+				console.log("find err:" + JSON.stringify(err));
+				console.log("find doc:" + JSON.stringify(documents));
+				if(!err && documents.length == 0 || err)	//means its not inserted or there was some problem finding
+				{
+					//try to insert
+					var doc = {'original_url': url, 'short_id': shortId};		//TODO: assuming no collisions
+					insertRow(doc, db.collection(MONGO_DB_URL_COL), function(err, document) {
+						var retval = {};
+						if(!err && document)
+						{
+							retval.original_url =document['original_url'];
+							retval.short_url = SITE_URL + document['short_id'];
+						}
+						else
+						{
+							retval.error = "Failed to insert the url";	//TODO: localization		
+						}
+						res.send(JSON.stringify(retval));
+					})
+				}
+				else if(!err)	//its already present in the database
+				{
 					var retval = {};
-					if(!err && document)
-					{
-						retval.original_url =document['original_url'];
-						retval.short_url = SITE_URL + document['short_id'];
-					}
-					else
-					{
-						retval.error = "Failed to insert the url";	//TODO: localization		
-					}
+					retval.original_url =documents[0]['original_url'];	//For now, assuming there wont be any collisions
+					retval.short_url = SITE_URL + documents[0]['short_id'];
 					res.send(JSON.stringify(retval));
-				})
-			}
-			else if(!err)	//its already present in the database
-			{
-				var retval = {};
-				retval.original_url =documents[0]['original_url'];	//For now, assuming there wont be any collisions
-				retval.short_url = SITE_URL + documents[0]['short_id'];
-				res.send(JSON.stringify(retval));
-			}
-		});
+				}
+			});
 
-	});
+		});
+	}
 });
 
 app.get('/init', function(req, res){

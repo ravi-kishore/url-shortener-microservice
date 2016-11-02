@@ -56,6 +56,7 @@ app.get('/new/*', function(req, res){
 	{
 		var retval = {};
 		retval.error = "Failed to generate a short url as the given string is not a url";
+		res.setHeader('Content-Type', 'application/json');
 		res.send(JSON.stringify(retval));
 	}
 	else
@@ -80,6 +81,7 @@ app.get('/new/*', function(req, res){
 						{
 							retval.error = "Failed to insert the url";	//TODO: localization		
 						}
+						res.setHeader('Content-Type', 'application/json');
 						res.send(JSON.stringify(retval));
 						db.close();
 					})
@@ -89,6 +91,7 @@ app.get('/new/*', function(req, res){
 					var retval = {};
 					retval.original_url =documents[0]['original_url'];	//For now, assuming there wont be any collisions
 					retval.short_url = SITE_URL + documents[0]['short_id'];
+					res.setHeader('Content-Type', 'application/json');
 					res.send(JSON.stringify(retval));
 					db.close();
 				}
@@ -130,7 +133,10 @@ app.get('/:shortId', function(req, res){
 				res.redirect(documents[0]['original_url']);
 			}
 			else
+			{
+				res.setHeader('Content-Type', 'application/json');
 				res.send('{"error": "No site registered with this url"}');
+			}
 		});
 	});
 });

@@ -81,6 +81,7 @@ app.get('/new/*', function(req, res){
 							retval.error = "Failed to insert the url";	//TODO: localization		
 						}
 						res.send(JSON.stringify(retval));
+						db.close();
 					})
 				}
 				else if(!err)	//its already present in the database
@@ -89,6 +90,7 @@ app.get('/new/*', function(req, res){
 					retval.original_url =documents[0]['original_url'];	//For now, assuming there wont be any collisions
 					retval.short_url = SITE_URL + documents[0]['short_id'];
 					res.send(JSON.stringify(retval));
+					db.close();
 				}
 			});
 
